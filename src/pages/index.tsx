@@ -1,11 +1,90 @@
+"use client";
+
+//Import bootstrap
+import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
+import "../styles/Home.module.css"; // Import CSS
+
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
-import styles from "@/styles/Home.module.css";
+import React, { useEffect, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
-const inter = Inter({ subsets: ["latin"] });
+import GolbalVar from "../../src/js/global";
+
+//Import component
+import ListMap from "../../src/component/ListMap";
+import Header from "../../src/component/Header";
 
 export default function Home() {
+  const mapContainerRef = useRef();
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [mapRaster, setMapRaster] = React.useState(
+    "https://mt1.google.com/vt/lyrs=y&hl=vi&x={x}&y={y}&z={z}"
+  );
+  const [latLocation, setLatLocation] = React.useState(12.69396589054595);
+  const [longLocation, setLongLocation] = React.useState(108.05858136776806);
+  useEffect(() => {
+    typeof document !== undefined
+      ? require("bootstrap/dist/js/bootstrap.bundle.min.js")
+      : null;
+  }, []);
+  useEffect(() => {
+    mapboxgl.accessToken = GolbalVar.MAPBOX_TOKEN;
+    mapRef.current = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/streets-v11", // style URL
+      center: [longLocation, latLocation], // starting position [lng, lat]
+      zoom: 9,
+    });
+    newMarker(longLocation, latLocation, mapRef.current);
+    mapRef.current.setStyle({
+      version: 8,
+      sources: {
+        "raster-tiles": {
+          type: "raster",
+          tiles: [mapRaster],
+          tileSize: 256,
+        },
+      },
+      layers: [
+        {
+          id: "simple-tiles",
+          type: "raster",
+          source: "raster-tiles",
+          minzoom: 0,
+          maxzoom: 22,
+        },
+      ],
+    });
+
+    // Get location user
+    mapRef.current.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true,
+        },
+        trackUserLocation: true,
+      })
+    );
+
+    // Listen for the `geolocate` event that the GeolocateControl fires.
+  }, []);
+
+  /* Function */
+  const newMarker = async (lng: any, lat: any, map: any) => {
+    // Create a new marker.
+    const el = document.createElement("div");
+    el.className = "marker";
+    // /Users/congdt/AlphaGroup/ttland/ttland-next/src/images
+    el.style.backgroundImage = "url('/images/mapbox-icon.png')";
+    el.style.width = "2rem";
+    el.style.height = "2rem";
+    el.style.backgroundSize = "cover";
+    // Add marker to map.
+    await new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
+  };
   return (
     <>
       <Head>
@@ -14,101 +93,17 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{" "}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
+
+      <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+        <main id="map" style={{ width: "100%", height: "100%" }}></main>
+        <div
+          className="content"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        >
+          <Header />
+          <ListMap />
         </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+      </div>
     </>
   );
 }
